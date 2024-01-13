@@ -1,21 +1,19 @@
 $(function () {
-  const amen = {};
-  $("#input#check_amen").change(function () {
-    if ($(this).is(":checked"))
-      amen[$(this).attr("data-name")] = $(this).attr("data-id");
-    else delete amen[$(this).attr("data-name")];
-    const objNames = Object.keys(amen);
-    $(".amenities h4").text(objNames.sort().join(", "));
-  });
-});
-
-$(function () {
-  const apiUrl = "http://0.0.0.0:5001/api/v1/status/";
-  $.get(apiUrl, function (data, status) {
-    if (data.status === "OK" && status === "success") {
-      $("#api_status").addClass("available");
+  const amenities = {};
+  $('li input[type=checkbox]').change(
+    function () {
+      if (this.checked) {
+        amenities[this.dataset.name] = this.dataset.id;
+      } else {
+        delete amenities[this.dataset.name];
+      }
+      $('.amenities h4').text(Object.keys(amenities).sort().join(', '));
+    });
+  $.getJSON('http://0.0.0.0:5001/api/v1/status/', (data) => {
+    if (data.status === 'OK') {
+      $('div#api_status').addClass('available');
     } else {
-      $("#api_status").removeClass("available");
+      $('div#api_status').removeClass('available');
     }
   });
 });

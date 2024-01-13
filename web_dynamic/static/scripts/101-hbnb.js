@@ -1,14 +1,21 @@
 const HOST = 'http://127.0.0.1:5001';
+const amenities = {};
+const cities = {};
+const states = {};
 
-function searchPlace () {
+function searchPlace() {
   $.post({
     url: `${HOST}/api/v1/places_search`,
-    data: JSON.stringify({}),
+    data: JSON.stringify({
+      amenities: Object.values(amenities),
+      states: Object.values(states),
+      cities: Object.values(cities)
+    }),
     headers: {
       'Content-Type': 'application/json'
     },
     success: (data) => {
-      $('section.places').empty(); // clear existing content, if you dont , it appends the amenities and so you will repeated amenities over and over
+      $('section.places').empty(); //clear existing content, if you dont , it appends the amenities and so you will repeated amenities over and over
       data.forEach(place => $('section.places').append(
         `<article>
           <div class="title_box">
@@ -26,21 +33,42 @@ function searchPlace () {
           </article>`
       ));
     },
-    dataType: 'json'
+    datatype: 'json'
   });
 }
 
+function fetchReviews(placeId) {
+  $.getJSON(
+    `{HOST}/api/v1/places/${placeId}/reviews`,
+  ) 
+}
 $(function () {
-  const amenities = {};
-  $('li input[type=checkbox]').change(
-    function () {
-      if (this.checked) {
-        amenities[this.dataset.name] = this.dataset.id;
-      } else {
-        delete amenities[this.dataset.name];
-      }
+  $('li input[type="checkbox"]').bind('change', (e) => {
+    const el = e.target;
+    let tt;
+    switch (el.id) {
+      case 'state_filter':
+        tt = states;
+        break;
+      case 'city_filter':
+        tt = cities;
+        break;
+      case 'amenity_filter':
+        tt = amenities;
+        break;
+    }
+    if (el.checked) {
+      tt[el.dataset.name] = el.dataset.id;
+    } else {
+      delete tt[el.dataset.name];
+    }
+    if (el.id === 'amenity_filter') {
       $('.amenities h4').text(Object.keys(amenities).sort().join(', '));
-    });
+    } else {
+      $('.locations h4').text(
+        Object.keys(Object.assign({}, states, cities)).sort().join(', '));
+    }
+  });
   $.getJSON('http://0.0.0.0:5001/api/v1/status/', (data) => {
     if (data.status === 'OK') {
       $('div#api_status').addClass('available');
@@ -48,7 +76,6 @@ $(function () {
       $('div#api_status').removeClass('available');
     }
   });
-
   // Bind the click event to the SearchPlace function
   $('.filters button').bind('click', searchPlace);
 
